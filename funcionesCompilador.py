@@ -122,6 +122,51 @@ def es_numero(cad):
                 return False
     return True
 
+def obtenerPrioridadOperador(o):
+    # Función que trabaja con convertirInfijaA**.
+    return {'(':1, ')':2, '+': 3, '-': 3, '*': 4, '/':4, '^':5}.get(o)
+
+def obtenerListaInfija(cadena_infija):
+    '''Devuelve una cadena en notación infija dividida por sus elementos.'''
+    infija = []
+    cad = ''
+    for i in cadena_infija:
+       if i in['+', '-', '*', '/', '(', ')', '^']:
+           if cad != '':
+               infija.append(cad)
+               cad = ''
+           infija.append(i)
+       elif i == chr(32): # Si es un espacio.
+           cad = cad
+       else:
+           cad += i
+    if cad != '':
+       infija.append(cad)
+    return infija
+
+
+def convertirInfijaAPostfija(expresion_infija):
+    '''Convierte una expresión infija a una posfija, devolviendo una lista.'''
+    infija = obtenerListaInfija(expresion_infija)
+    pila = []
+    salida = []
+    for e in infija:
+        if e == '(':
+            pila.append(e)
+        elif e == ')':
+            while pila[len(pila) - 1 ] != '(':
+                salida.append(pila.pop())
+            pila.pop()
+        elif e in ['+', '-', '*', '/', '^']:
+            while (len(pila) != 0) and (obtenerPrioridadOperador(e)) <= obtenerPrioridadOperador(pila[len(pila) - 1]):
+                salida.append(pila.pop())
+            pila.append(e)
+        else:
+            salida.append(e)
+    while len(pila) != 0:
+        salida.append(pila.pop())
+    return salida
+
 def evalua_posfija(posfija):
     pila=[]
     cod_int=[]
