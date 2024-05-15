@@ -1,0 +1,11 @@
+
+hola ;
+adios ;
+
+xd ;
+var int a ;
+var int b = 10 ;
+var string c = " hola " ;
+
+b = 100 ;
+c = 0 ;

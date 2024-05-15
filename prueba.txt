@@ -1,0 +1,10 @@
+/*Esto es un comentario*/
+hola;
+adios;
+/*esto es otro comentario*/
+xd;
+var int a;
+var int b = 10;
+var string c = "hola";
+
+b = 100;
