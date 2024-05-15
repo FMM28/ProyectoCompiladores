@@ -1,6 +1,8 @@
 import string
 from PyQt5.QtWidgets import QApplication, QFileDialog       #pip install PyQt5
 import sys
+import tkinter as tk
+from tkinter import filedialog
 
 # Funciones para contruir el compilador, funcionara como una libreria para importar las funciones  
 # y que la logica sea mas facil de entender
@@ -13,8 +15,13 @@ class Variable:
 
 def abrirArchivo():
     lineas = []
-    ventana = QApplication(sys.argv)
-    nombre_archivo, _ = QFileDialog.getOpenFileName(None, "Seleccionar archivo")
+    try:
+        ventana = QApplication(sys.argv)
+        nombre_archivo, _ = QFileDialog.getOpenFileName(None, "Seleccionar archivo")
+    except:
+        root = tk.Tk()
+        root.withdraw()
+        nombre_archivo = filedialog.askopenfilename()
     try:
         with open(nombre_archivo, 'r') as archivo:
             for linea in archivo:
