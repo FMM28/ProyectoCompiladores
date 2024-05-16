@@ -14,8 +14,9 @@ del lineasTMP
 # print (lineas)
 salida("Sin Comentarios",lineas)
 
-instrucciones = []
+instrucciones = {'data':[],'bss':[],'text':[]}          #se van a ir guaradando las intrucciones para al final imprimirlas
 variables = []
+mensajes = 0
 
 for i,linea in enumerate(lineas):
     # print(i)
@@ -45,22 +46,35 @@ for i,linea in enumerate(lineas):
                     else:
                         error("Falta tipo",i)
                 elif linea[0] == 'print':
-                    pass
+                    ins,da,mensajes = imprime(linea[2:-2],variables,i,mensajes)
+                    instrucciones["text"].extend(ins)
+                    instrucciones["data"].extend(da)
                 elif linea[0] == 'read':
                     pass
                 elif linea[0] == 'for':
                     pass
                 elif linea[0] == 'println':
                     pass
-                elif linea[0] == 'end':
-                    pass
+                elif linea[0] == 'end':                             #guarda las varaibles resultantes y manda el archivo de salida
+                    for var in variables:
+                        if var.valor != None:
+                            if var.tipo in ['string','char']:
+                                instrucciones["data"].append(f'{var.nombre}: .ascii "{var.valor}"')
+                            elif var.tipo == 'float':
+                                instrucciones["data"].append(f'{var.nombre}: .float {var.valor}')
+                            elif var.tipo == 'int':
+                                instrucciones["data"].append(f'{var.nombre}: .word {var.valor}')
+                        else:
+                            instrucciones["bss"].append(f'{var.nombre}: .space 4')
+
+                    salidaEnsablador("ensablador",instrucciones)
             else:
                 op=0
                 for token in linea:                                     #Cuenta cuantos operadores tiene para determinar si
                     if es_operador(token):                              # es operacion o una asignacion de valores
                         op+=1
                 if op>1:                                                #Operacion
-                    pass
+                    print(evalua_posfija(convertirInfijaAPostfija(linea[2:-1])))
                 else:                                                   #Asigancion de valores
                     for var in variables:
                             if var.nombre == linea[0]:
@@ -72,6 +86,8 @@ for i,linea in enumerate(lineas):
                                 else:
                                     if esDelTipo(var.tipo,linea[3]):
                                         var.valor = linea[3]
+                                    elif es_palRes(linea[2]):               #aqui va la parte de seno,coseno,tangente
+                                        pass
                                     else:
                                         error("El valor no es valido",i)
 for v in variables:

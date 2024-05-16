@@ -1,8 +1,12 @@
 import string
-from PyQt5.QtWidgets import QApplication, QFileDialog       #pip install PyQt5
 import sys
 import tkinter as tk
 from tkinter import filedialog
+
+try:
+    from PyQt5.QtWidgets import QApplication, QFileDialog       #pip install PyQt5
+except:
+    pass
 
 # Funciones para contruir el compilador, funcionara como una libreria para importar las funciones  
 # y que la logica sea mas facil de entender
@@ -213,9 +217,57 @@ def esDelTipo(tipo,valor):
         return False
     return True
 
+def imprime(datos,listaVariables,linea,mensajes):
+    instrucciones = ["\tli a0, 1"]
+    data = []
+    salida = ''
+    estado = 'a'
+    tmp=''
+    for dato in datos:
+        if estado == 'a':
+            if dato == '"' or dato == "'":
+                estado = 'b'
+            else:
+                if dato == ',':
+                    salida += ' '
+                else:
+                    encontrado = True
+                    for var in listaVariables:
+                        if var.nombre == dato:
+                            salida += var.nombre
+                            encontrado=False
+                            break
+                    if encontrado:
+                        error(f"La variable {dato} no ha sido declarada",linea)
+        elif estado == 'b':
+            if dato== '"' or dato == "'":
+                data.append(f'mensaje{mensajes}: .ascii "{tmp}"')
+                salida += tmp
+                mensajes+=1
+                estado = 'a'
+            else:
+                tmp = dato
+    print(salida)
+    
+    return instrucciones,data,mensajes
+
 def salida(nombre,datos):
         
         with open(nombre+'.txt', 'w') as archivo:
             for lista in datos:
                 linea = ' '.join(elemento for elemento in lista) + '\n'
                 archivo.write(linea)
+
+def salidaEnsablador(nombre,datos):
+    with open(nombre+'.txt','w') as archivo:
+        archivo.write(".data\n")
+        for linea in datos["data"]:
+            archivo.write(linea+'\n')
+
+        archivo.write("\n.bss\n")
+        for linea in datos["bss"]:
+            archivo.write(linea+'\n')
+
+        archivo.write("\n.text\n.global _start\n\n_start:\n")
+        for linea in datos["text"]:
+            archivo.write(linea+'\n')

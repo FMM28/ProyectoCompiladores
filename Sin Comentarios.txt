@@ -6,6 +6,17 @@ xd ;
 var int a ;
 var int b = 10 ;
 var string c = " hola " ;
+var float d ;
 
 b = 100 ;
-c = 0 ;
+
+a = ( b + 10 ) / 2 ;
+
+b = sin ( a ) ;
+
+
+d = ( b + 40 ) * sin ( a ) ;
+
+print ( b ) ;
+
+end ;

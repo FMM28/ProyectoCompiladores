@@ -1,0 +1,13 @@
+.data
+b: .word 100
+c: .ascii "hola"
+
+.bss
+a: .space 4
+d: .space 4
+
+.text
+.global _start
+
+_start:
+li a0, 1
