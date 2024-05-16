@@ -1,8 +1,4 @@
-/*Esto es un comentario*/
-hola;
-adios;
-/*esto es otro comentario*/
-xd;
+
 var int a;
 var int b = 10;
 var string c = "hola";
@@ -18,5 +14,9 @@ b = sin(a);
 d = (b + 40) * sin (a);
 
 print(b);
+
+c = "adios";
+
+print(c,"mundo");
 
 end;

@@ -14,7 +14,7 @@ del lineasTMP
 # print (lineas)
 salida("Sin Comentarios",lineas)
 
-instrucciones = {'data':[],'bss':[],'text':[]}          #se van a ir guaradando las intrucciones para al final imprimirlas
+instrucciones = {'data':[],'bss':[],'text':[],'funciones':set([])}          #se van a ir guaradando las intrucciones para al final imprimirlas
 variables = []
 mensajes = 0
 
@@ -46,9 +46,10 @@ for i,linea in enumerate(lineas):
                     else:
                         error("Falta tipo",i)
                 elif linea[0] == 'print':
-                    ins,da,mensajes = imprime(linea[2:-2],variables,i,mensajes)
+                    ins,fu,da,mensajes = imprime(linea[2:-2],variables,i,mensajes)
                     instrucciones["text"].extend(ins)
-                    instrucciones["data"].extend(da)
+                    instrucciones['funciones'].update(fu)
+                    instrucciones["data"]=list(set(instrucciones["data"]).union(set(da)))
                 elif linea[0] == 'read':
                     pass
                 elif linea[0] == 'for':
@@ -66,9 +67,11 @@ for i,linea in enumerate(lineas):
                                 instrucciones["data"].append(f'{var.nombre}: .word {var.valor}')
                         else:
                             instrucciones["bss"].append(f'{var.nombre}: .space 4')
+                    instrucciones["text"].extend(['\n\t# Salida del programa','\tli a7, 93','\tli a0, 0','\tecall'])
 
                     salidaEnsablador("ensablador",instrucciones)
-            else:
+
+            elif existerVar(variables,linea[0]):
                 op=0
                 for token in linea:                                     #Cuenta cuantos operadores tiene para determinar si
                     if es_operador(token):                              # es operacion o una asignacion de valores
@@ -77,18 +80,24 @@ for i,linea in enumerate(lineas):
                     print(evalua_posfija(convertirInfijaAPostfija(linea[2:-1])))
                 else:                                                   #Asigancion de valores
                     for var in variables:
-                            if var.nombre == linea[0]:
-                                if len(linea)==4:
-                                    if esDelTipo(var.tipo,linea[2]) and var.tipo not in ["char","string"]:
-                                        var.valor = linea[2]
-                                    else:
-                                        error("El valor no es valido",i)
+                        if var.nombre == linea[0]:
+                            if len(linea)==4:
+                                if esDelTipo(var.tipo,linea[2]) and var.tipo not in ["char","string"]:
+                                    instrucciones["text"].extend([f'\n\t# Se actualiza la variable {var.nombre}',f'\tli t0 {linea[2]}',f'\tla t1 {var.nombre}','\tsw t0, 0(t1)'])
                                 else:
-                                    if esDelTipo(var.tipo,linea[3]):
-                                        var.valor = linea[3]
-                                    elif es_palRes(linea[2]):               #aqui va la parte de seno,coseno,tangente
-                                        pass
-                                    else:
-                                        error("El valor no es valido",i)
+                                    error("El valor no es valido",i)
+                            else:
+                                if es_palRes(linea[2]):               #aqui va la parte de seno,coseno,tangente
+                                    pass
+                                elif esDelTipo(var.tipo,linea[3]):
+                                    instrucciones['funciones'].add('copiaCadena')
+                                    instrucciones['data'].append(f'mensaje{mensajes}: .ascii "{linea[3]}"')
+                                    instrucciones['text'].extend([f'\n\t# Se actualiza la variable {var.nombre}',f'\tla t0, mensaje{mensajes}',f'\tla t1, {var.nombre}','\tjal ra, copiar_cadena'])
+                                    mensajes+=1
+                                else:
+                                    error("El valor no es valido",i)
+                            break
+            else:
+                error(f"'{linea[0]}' no es una palabra reservada o variable",i)
 for v in variables:
     print(v.nombre,v.tipo,v.valor)

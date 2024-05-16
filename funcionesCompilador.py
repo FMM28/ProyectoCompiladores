@@ -199,10 +199,15 @@ def error(mensaje,linea):
     exit()
 
 def agregaVar(lista,tipo,nombre,valor=None):
+    if existerVar(lista,nombre):
+        return True
+    lista.append(Variable(tipo,nombre,valor))
+
+def existerVar(lista,nombre):
     for var in lista:
         if var.nombre == nombre:
             return True
-    lista.append(Variable(tipo,nombre,valor))
+    return False
 
 def esDelTipo(tipo,valor):
     try:
@@ -218,9 +223,9 @@ def esDelTipo(tipo,valor):
     return True
 
 def imprime(datos,listaVariables,linea,mensajes):
-    instrucciones = ["\tli a0, 1"]
-    data = []
-    salida = ''
+    instrucciones = ["\n\t#Imprimiendo"]
+    funciones = {'copiaCadena','obtenerLongitud'}
+    data = ["mensaje_concatenado: .space 20"]
     estado = 'a'
     tmp=''
     for dato in datos:
@@ -229,27 +234,27 @@ def imprime(datos,listaVariables,linea,mensajes):
                 estado = 'b'
             else:
                 if dato == ',':
-                    salida += ' '
+                    data.append('espacio: .ascii " "')
+                    instrucciones.extend(["\tla t0, espacio","\tla t1, mensaje_concatenado","\tjal ra, copiar_cadena","\tla t0, espacio","\tjal ra, obtener_longitud","\tadd t1, t1, t3"])
                 else:
-                    encontrado = True
-                    for var in listaVariables:
-                        if var.nombre == dato:
-                            salida += var.nombre
-                            encontrado=False
-                            break
-                    if encontrado:
+                    if existerVar(listaVariables,dato):
+                        for var in listaVariables:
+                            if var.nombre == dato:
+                                instrucciones.extend([f"\tla t0, {dato}","\tla t1, mensaje_concatenado","\tjal ra, copiar_cadena",f"\tla t0, {dato}","\tjal ra, obtener_longitud","\tadd t1, t1, t3"])
+                                break
+                    else:
                         error(f"La variable {dato} no ha sido declarada",linea)
         elif estado == 'b':
             if dato== '"' or dato == "'":
                 data.append(f'mensaje{mensajes}: .ascii "{tmp}"')
-                salida += tmp
+                instrucciones.extend([f"\tla t0, mensaje{mensajes}","\tla t1, mensaje_concatenado","\tjal ra, copiar_cadena",f"\tla t0, mensaje{mensajes}","\tjal ra, obtener_longitud","\tadd t1, t1, t3"])
                 mensajes+=1
                 estado = 'a'
             else:
                 tmp = dato
-    print(salida)
+    instrucciones.extend(["\tli a0, 1","\tla a1, mensaje_concatenado","\tjal ra, obtener_longitud","\tmv a2, a1","\tli a7, 64","\tecall"])
     
-    return instrucciones,data,mensajes
+    return instrucciones,funciones,data,mensajes
 
 def salida(nombre,datos):
         
@@ -271,3 +276,10 @@ def salidaEnsablador(nombre,datos):
         archivo.write("\n.text\n.global _start\n\n_start:\n")
         for linea in datos["text"]:
             archivo.write(linea+'\n')
+
+        archivo.write("\n#Funciones utilizadas")
+        for linea in datos['funciones']:
+            if linea == 'copiaCadena':
+                archivo.write('\n\ncopiar_cadena:\n\tcopiar_loop:\n\t\tlb t2, 0(t0)\n\t\tsb t2, 0(t1)\n\t\taddi t0, t0, 1\n\t\taddi t1, t1, 1\n\t\tbnez t2, copiar_loop\n\tret')
+            elif linea == 'obtenerLongitud':
+                archivo.write('\n\nobtener_longitud:\n\tlongitud_loop:\n\t\tlb t2, 0(t0)\n\t\tbeqz t2, longitud_fin\n\t\taddi t0, t0, 1\n\t\taddi t3, t3, 1\n\t\tj longitud_loop\n\tlongitud_fin:\n\tret')
