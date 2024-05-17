@@ -1,10 +1,10 @@
 .data
-espacio: .ascii " "
 mensaje0: .ascii "adios"
-mensaje_concatenado: .space 20
 mensaje1: .ascii "mundo"
 b: .word 10
 c: .ascii "hola"
+mensaje_concatenado: .space 20
+espacio: .ascii " "
 
 .bss
 a: .space 4
@@ -35,7 +35,7 @@ _start:
 	ecall
 
 	# Se actualiza la variable c
-	la t0, mnesaje0
+	la t0, mensaje0
 	la t1, c
 	jal ra, copiar_cadena
 
@@ -72,15 +72,6 @@ _start:
 
 #Funciones utilizadas
 
-copiar_cadena:
-	copiar_loop:
-		lb t2, 0(t0)
-		sb t2, 0(t1)
-		addi t0, t0, 1
-		addi t1, t1, 1
-		bnez t2, copiar_loop
-	ret
-
 obtener_longitud:
 	longitud_loop:
 		lb t2, 0(t0)
@@ -89,4 +80,13 @@ obtener_longitud:
 		addi t3, t3, 1
 		j longitud_loop
 	longitud_fin:
+	ret
+
+copiar_cadena:
+	copiar_loop:
+		lb t2, 0(t0)
+		sb t2, 0(t1)
+		addi t0, t0, 1
+		addi t1, t1, 1
+		bnez t2, copiar_loop
 	ret

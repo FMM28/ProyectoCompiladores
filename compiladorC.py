@@ -14,7 +14,7 @@ del lineasTMP
 # print (lineas)
 salida("Sin Comentarios",lineas)
 
-instrucciones = {'data':[],'bss':[],'text':[],'funciones':set([])}          #se van a ir guaradando las intrucciones para al final imprimirlas
+instrucciones = {'data':set([]),'bss':[],'text':[],'funciones':set([])}          #se van a ir guaradando las intrucciones para al final imprimirlas
 variables = []
 mensajes = 0
 
@@ -46,12 +46,21 @@ for i,linea in enumerate(lineas):
                     else:
                         error("Falta tipo",i)
                 elif linea[0] == 'print':
-                    ins,fu,da,mensajes = imprime(linea[2:-2],variables,i,mensajes)
-                    instrucciones["text"].extend(ins)
-                    instrucciones['funciones'].update(fu)
-                    instrucciones["data"]=list(set(instrucciones["data"]).union(set(da)))
+                    if linea[1] == "(" and linea[-2] == ")":
+                        ins,fu,da,mensajes = imprime(linea[2:-2],variables,i,mensajes)
+                        instrucciones["text"].extend(ins)
+                        instrucciones['funciones'].update(fu)
+                        instrucciones["data"].update(da)
+                    else:
+                        error("Falta un parentesis",i)
                 elif linea[0] == 'read':
-                    pass
+                    if existerVar(variables,linea[2]):
+                        if linea[1] == "(" and linea[-2] == ")":
+                            instrucciones['text'].extend(["\n\t#Leyendo","\tli a0, 0",f"\tla a1, {linea[2]}","\tli a2, 100","\tli a7, 63","ecall"])
+                        else:
+                            error("Falta un parentesis",i)
+                    else:
+                        error(f"La variable {linea[2]} no ha sido declarada",linea)
                 elif linea[0] == 'for':
                     pass
                 elif linea[0] == 'println':
@@ -60,11 +69,11 @@ for i,linea in enumerate(lineas):
                     for var in variables:
                         if var.valor != None:
                             if var.tipo in ['string','char']:
-                                instrucciones["data"].append(f'{var.nombre}: .ascii "{var.valor}"')
+                                instrucciones["data"].add(f'{var.nombre}: .ascii "{var.valor}"')
                             elif var.tipo == 'float':
-                                instrucciones["data"].append(f'{var.nombre}: .float {var.valor}')
+                                instrucciones["data"].add(f'{var.nombre}: .float {var.valor}')
                             elif var.tipo == 'int':
-                                instrucciones["data"].append(f'{var.nombre}: .word {var.valor}')
+                                instrucciones["data"].add(f'{var.nombre}: .word {var.valor}')
                         else:
                             instrucciones["bss"].append(f'{var.nombre}: .space 4')
                     instrucciones["text"].extend(['\n\t# Salida del programa','\tli a7, 93','\tli a0, 0','\tecall'])
@@ -77,7 +86,12 @@ for i,linea in enumerate(lineas):
                     if es_operador(token):                              # es operacion o una asignacion de valores
                         op+=1
                 if op>1:                                                #Operacion
-                    print(evalua_posfija(convertirInfijaAPostfija(linea[2:-1])))
+                    for c in linea[2:-1]:
+                        if es_id(c):
+                            if not existerVar(variables,c):
+                                error(f"La variable {c} no ha sido declarada",i)
+                    opera(evalua_posfija(convertirInfijaAPostfija(linea[2:-1])),linea[0])
+
                 else:                                                   #Asigancion de valores
                     for var in variables:
                         if var.nombre == linea[0]:
@@ -91,7 +105,7 @@ for i,linea in enumerate(lineas):
                                     pass
                                 elif esDelTipo(var.tipo,linea[3]):
                                     instrucciones['funciones'].add('copiaCadena')
-                                    instrucciones['data'].append(f'mensaje{mensajes}: .ascii "{linea[3]}"')
+                                    instrucciones['data'].add(f'mensaje{mensajes}: .ascii "{linea[3]}"')
                                     instrucciones['text'].extend([f'\n\t# Se actualiza la variable {var.nombre}',f'\tla t0, mensaje{mensajes}',f'\tla t1, {var.nombre}','\tjal ra, copiar_cadena'])
                                     mensajes+=1
                                 else:
@@ -99,5 +113,6 @@ for i,linea in enumerate(lineas):
                             break
             else:
                 error(f"'{linea[0]}' no es una palabra reservada o variable",i)
-for v in variables:
-    print(v.nombre,v.tipo,v.valor)
+# for v in variables:
+#     print(v.nombre,v.tipo,v.valor)
+print("El programa se ha compilado exitosamente")

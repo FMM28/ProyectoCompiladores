@@ -194,6 +194,19 @@ def evalua_posfija(posfija):
             pila.append(e)
     return cod_int
 
+def opera(codigoInt,res):
+    bss = set([])
+    instrucciones = []
+    registro = 1
+    temporal = 1
+    for i,op in enumerate(codigoInt):
+        if i<(len(codigoInt)-1):
+            bss.add(f't{temporal} .space 4')
+            temporal+=1
+        else:
+            pass
+    print(bss)
+
 def error(mensaje,linea):
     print(f"Error en la linea {(linea+1)}:",mensaje)
     exit()
@@ -225,7 +238,7 @@ def esDelTipo(tipo,valor):
 def imprime(datos,listaVariables,linea,mensajes):
     instrucciones = ["\n\t#Imprimiendo"]
     funciones = {'copiaCadena','obtenerLongitud'}
-    data = ["mensaje_concatenado: .space 20"]
+    data = {"mensaje_concatenado: .space 20"}
     estado = 'a'
     tmp=''
     for dato in datos:
@@ -234,7 +247,7 @@ def imprime(datos,listaVariables,linea,mensajes):
                 estado = 'b'
             else:
                 if dato == ',':
-                    data.append('espacio: .ascii " "')
+                    data.add('espacio: .ascii " "')
                     instrucciones.extend(["\tla t0, espacio","\tla t1, mensaje_concatenado","\tjal ra, copiar_cadena","\tla t0, espacio","\tjal ra, obtener_longitud","\tadd t1, t1, t3"])
                 else:
                     if existerVar(listaVariables,dato):
@@ -246,7 +259,7 @@ def imprime(datos,listaVariables,linea,mensajes):
                         error(f"La variable {dato} no ha sido declarada",linea)
         elif estado == 'b':
             if dato== '"' or dato == "'":
-                data.append(f'mensaje{mensajes}: .ascii "{tmp}"')
+                data.add(f'mensaje{mensajes}: .ascii "{tmp}"')
                 instrucciones.extend([f"\tla t0, mensaje{mensajes}","\tla t1, mensaje_concatenado","\tjal ra, copiar_cadena",f"\tla t0, mensaje{mensajes}","\tjal ra, obtener_longitud","\tadd t1, t1, t3"])
                 mensajes+=1
                 estado = 'a'
