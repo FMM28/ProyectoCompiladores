@@ -14,7 +14,7 @@ del lineasTMP
 # print (lineas)
 salida("Sin Comentarios",lineas)
 
-instrucciones = {'data':set([]),'bss':[],'text':[],'funciones':set([])}          #se van a ir guaradando las intrucciones para al final imprimirlas
+instrucciones = {'data':set(),'bss':set(),'text':[],'funciones':set()}          #se van a ir guaradando las intrucciones para al final imprimirlas
 variables = []
 mensajes = 0
 
@@ -28,21 +28,19 @@ for i,linea in enumerate(lineas):
                         if len(linea)==4:
                             if agregaVar(variables,linea[1],linea[2]):
                                 error(f"La variable '{linea[2]}' ya ha sido declarada previamente",i) 
-                        else:
-                            for j in range(len(linea)):
-                                
-                                if linea[j]=='=':
-                                    if (linea[j+1]=="'" and linea[j+3]=="'") or (linea[j+1]=='"' and linea[j+3]=='"'):
-                                        if esDelTipo(linea[1],linea[j+2]):
-                                            if agregaVar(variables,linea[1],linea[j-1],linea[j+2]):
-                                                error(f"La variable '{linea[j-1]}' ya ha sido declarada previamente",i)
-                                        else:
-                                            error("El valor no es valido",i)
-                                    elif esDelTipo(linea[1],linea[j+1]):
-                                        if agregaVar(variables,linea[1],linea[j-1],linea[j+1]):
-                                            error(f"La variable '{linea[j-1]}' ya ha sido declarada previamente",i)
+                        else:        
+                            if linea[3]=='=':
+                                if (linea[4]=="'" and linea[6]=="'") or (linea[4]=='"' and linea[6]=='"'):
+                                    if esDelTipo(linea[1],linea[5]):
+                                        if agregaVar(variables,linea[1],linea[2],linea[5]):
+                                            error(f"La variable '{linea[2]}' ya ha sido declarada previamente",i)
                                     else:
                                         error("El valor no es valido",i)
+                                elif esDelTipo(linea[1],linea[4]):
+                                    if agregaVar(variables,linea[1],linea[2],linea[4]):
+                                        error(f"La variable '{linea[2]}' ya ha sido declarada previamente",i)
+                                else:
+                                    error("El valor no es valido",i)
                     else:
                         error("Falta tipo",i)
                 elif linea[0] == 'print':
@@ -75,7 +73,7 @@ for i,linea in enumerate(lineas):
                             elif var.tipo == 'int':
                                 instrucciones["data"].add(f'{var.nombre}: .word {var.valor}')
                         else:
-                            instrucciones["bss"].append(f'{var.nombre}: .space 4')
+                            instrucciones["bss"].add(f'{var.nombre}: .space 4')
                     instrucciones["text"].extend(['\n\t# Salida del programa','\tli a7, 93','\tli a0, 0','\tecall'])
 
                     salidaEnsablador("ensablador",instrucciones)
@@ -90,8 +88,10 @@ for i,linea in enumerate(lineas):
                         if es_id(c):
                             if not existerVar(variables,c):
                                 error(f"La variable {c} no ha sido declarada",i)
-                    opera(evalua_posfija(convertirInfijaAPostfija(linea[2:-1])),linea[0])
-
+                    ins,bs,fun = opera(evalua_posfija(convertirInfijaAPostfija(linea[2:-1])),linea[0])
+                    instrucciones["text"].extend(ins)
+                    instrucciones["bss"].update(bs)
+                    instrucciones["funciones"].update(fun)
                 else:                                                   #Asigancion de valores
                     for var in variables:
                         if var.nombre == linea[0]:

@@ -1,14 +1,16 @@
 .data
-mensaje0: .ascii "adios"
-mensaje1: .ascii "mundo"
-b: .word 10
-c: .ascii "hola"
 mensaje_concatenado: .space 20
 espacio: .ascii " "
+b: .word 10
+c: .ascii "hola"
+mensaje0: .ascii "adios"
+mensaje1: .ascii "mundo"
 
 .bss
 a: .space 4
 d: .space 4
+t2 .space 4
+t1 .space 4
 
 .text
 .global _start
@@ -19,6 +21,17 @@ _start:
 	li t0 100
 	la t1 b
 	sw t0, 0(t1)
+
+	#Realizando Operacion
+	li x2, b
+	addi x1, x2, 10
+	la x4, t1
+	sw x1, 0(x4)
+	li x2, t1
+	li x3, 2
+	div x1, x2, x3
+	la x4, a
+	sw x1, 0(x4)
 
 	#Imprimiendo
 	la t0, b
@@ -65,12 +78,50 @@ _start:
 	li a7, 64
 	ecall
 
+	#Realizando Operacion
+	li x2, 2
+	li x3, 2
+	mul x1, x2, x3
+	la x4, t1
+	sw x1, 0(x4)
+	li x2, t1
+	li x3, 2
+	mul x1, x2, x3
+	la x4, t2
+	sw x1, 0(x4)
+	li x2, t2
+	li x3, 2
+	mul x1, x2, x3
+	la x4, a
+	sw x1, 0(x4)
+
+	#Realizando Operacion
+	li x2, 2
+	li x3, 2
+	call potencia
+	la x4, t1
+	sw x1, 0(x4)
+	li x2, t1
+	li x3, 2
+	call potencia
+	la x4, a
+	sw x1, 0(x4)
+
 	# Salida del programa
 	li a7, 93
 	li a0, 0
 	ecall
 
 #Funciones utilizadas
+
+copiar_cadena:
+	copiar_loop:
+		lb t2, 0(t0)
+		sb t2, 0(t1)
+		addi t0, t0, 1
+		addi t1, t1, 1
+		bnez t2, copiar_loop
+	ret
 
 obtener_longitud:
 	longitud_loop:
@@ -82,11 +133,14 @@ obtener_longitud:
 	longitud_fin:
 	ret
 
-copiar_cadena:
-	copiar_loop:
-		lb t2, 0(t0)
-		sb t2, 0(t1)
-		addi t0, t0, 1
-		addi t1, t1, 1
-		bnez t2, copiar_loop
+potencia:
+	mv t0, a0
+	mv t1, a1
+	li a0, 1
+potencia_loop:
+	beq t1, zero, potencia_end
+	mul a0, a0, t0
+	addi t1, t1, -1
+	j potencia_loop
+potencia_end:
 	ret

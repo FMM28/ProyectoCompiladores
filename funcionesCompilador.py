@@ -101,7 +101,7 @@ def es_tipo(cad):
 
 def es_operador(cad):
     return cad in [
-        '+', '-', '*', '/', '%', '='
+        '+', '-', '*', '/', '%', '=', '^'
     ]
 
 def es_numero(cad):
@@ -187,6 +187,8 @@ def evalua_posfija(posfija):
                 resultado = 't'+str(cont) + "=" + op1 +'/' + op2 + ';'
             elif e=='*':
                 resultado = 't'+str(cont) + "=" + op1 +'*' + op2 + ';'
+            elif e=='^':
+                resultado = 't'+str(cont) + "=" + op1 +'^' + op2 + ';'
             pila.append('t'+str(cont))
             cod_int.append(resultado)
             cont+=1
@@ -195,17 +197,43 @@ def evalua_posfija(posfija):
     return cod_int
 
 def opera(codigoInt,res):
-    bss = set([])
-    instrucciones = []
-    registro = 1
+    def operacion(op):
+        if op[3]=='+':
+            if es_numero(op[4]):
+                instrucciones.extend([f'\tli x2, {op[2]}',f'\taddi x1, x2, {op[4]}'])
+            else:
+                instrucciones.extend([f'\tli x2, {op[2]}',f'\tli x3, {op[4]}','\tadd x1, x2, x3'])
+        elif op[3]=='-':
+            if es_numero(op[4]):
+                instrucciones.extend([f'\tli x2, {op[2]}',f'\taddi x1, x2, -{op[4]}'])
+            else:
+                instrucciones.extend([f'\tli x2, {op[2]}',f'\tli x3, {op[4]}','\tsub x1, x2, x3'])
+        elif op[3]=='*':
+            instrucciones.extend([f'\tli x2, {op[2]}',f'\tli x3, {op[4]}','\tmul x1, x2, x3'])
+        elif op[3]=='/':
+            instrucciones.extend([f'\tli x2, {op[2]}',f'\tli x3, {op[4]}','\tdiv x1, x2, x3'])
+        elif op[3]=='^':
+            funciones.add('potencia')
+            instrucciones.extend([f'\tli x2, {op[2]}',f'\tli x3, {op[4]}','\tcall potencia'])
+
+    bss = set()
+    instrucciones = ['\n\t#Realizando Operacion']
+    funciones = set()
     temporal = 1
     for i,op in enumerate(codigoInt):
+        op = separa_token(op)
+        # print(op)
         if i<(len(codigoInt)-1):
             bss.add(f't{temporal} .space 4')
+            operacion(op)
+            instrucciones.extend([f'\tla x4, t{temporal}','\tsw x1, 0(x4)'])        #Carga el resultado a la variable
             temporal+=1
         else:
-            pass
-    print(bss)
+            operacion(op)
+            instrucciones.extend([f'\tla x4, {res}','\tsw x1, 0(x4)'])        #Carga el resultado a la variable final
+
+    # print(bss)
+    return instrucciones,bss,funciones
 
 def error(mensaje,linea):
     print(f"Error en la linea {(linea+1)}:",mensaje)
@@ -296,3 +324,6 @@ def salidaEnsablador(nombre,datos):
                 archivo.write('\n\ncopiar_cadena:\n\tcopiar_loop:\n\t\tlb t2, 0(t0)\n\t\tsb t2, 0(t1)\n\t\taddi t0, t0, 1\n\t\taddi t1, t1, 1\n\t\tbnez t2, copiar_loop\n\tret')
             elif linea == 'obtenerLongitud':
                 archivo.write('\n\nobtener_longitud:\n\tlongitud_loop:\n\t\tlb t2, 0(t0)\n\t\tbeqz t2, longitud_fin\n\t\taddi t0, t0, 1\n\t\taddi t3, t3, 1\n\t\tj longitud_loop\n\tlongitud_fin:\n\tret')
+            elif linea == 'potencia':
+                archivo.write("\n\npotencia:\n\tmv t0, a0\n\tmv t1, a1\n\tli a0, 1\npotencia_loop:\n\tbeq t1, zero, potencia_end\n\tmul a0, a0, t0\n\taddi t1, t1, -1\n\tj potencia_loop\npotencia_end:\n\tret"
+)
