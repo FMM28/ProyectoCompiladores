@@ -15,43 +15,43 @@ del lineasTMP
 salida("Sin Comentarios",lineas)
 
 instrucciones = {'data':set(),'bss':set(),'text':[],'funciones':set()}          #se van a ir guaradando las intrucciones para al final imprimirlas
-variables = []
-mensajes = 0
-saltosFor = 0
-entraFor = False
+variables = []      #lista de variables
+mensajes = 0        #contador de mensajes
+saltosFor = 0       #contador de ciclos for existentes
+entraFor = False    #Almacena si esta dentro de un for
 
 try:
-    for i,linea in enumerate(lineas):
+    for i,linea in enumerate(lineas):           #recorre linea por linea
         # print(i)
-        if entraFor:
+        if entraFor:            #busca el final del ciclo for
             if linea[-1]=='}':
                 instrucciones["text"].extend(['\taddi x30, x30, 1','\tsw x29, 0(x30)',f'\tj for{saltosFor}',f'\nfinFor{saltosFor}:'])
                 entraFor = False
                 saltosFor+=1
-        if len(linea)>1:
+        if len(linea)>1:                #se salta lineas vacias
             if es_id(linea[0]):
                 if es_palRes(linea[0]):
                     if linea[0] == 'var':               #Declaracion de variables
                         if es_tipo(linea[1]):
-                            if len(linea)==4:
+                            if len(linea)==4:           #Variable no incializada
                                 if agregaVar(variables,linea[1],linea[2]):
                                     error(f"La variable '{linea[2]}' ya ha sido declarada previamente",i) 
-                            else:        
+                            else:                       #Variable inicializada
                                 if linea[3]=='=':
-                                    if (linea[4]=="'" and linea[6]=="'") or (linea[4]=='"' and linea[6]=='"'):
+                                    if (linea[4]=="'" and linea[6]=="'") or (linea[4]=='"' and linea[6]=='"'):          #variable del tipo string
                                         if esDelTipo(linea[1],linea[5]):
                                             if agregaVar(variables,linea[1],linea[2],linea[5]):
                                                 error(f"La variable '{linea[2]}' ya ha sido declarada previamente",i)
                                         else:
                                             error("El valor no es valido",i)
-                                    elif esDelTipo(linea[1],linea[4]):
+                                    elif esDelTipo(linea[1],linea[4]):                                                  #Variable numerica
                                         if agregaVar(variables,linea[1],linea[2],linea[4]):
                                             error(f"La variable '{linea[2]}' ya ha sido declarada previamente",i)
                                     else:
                                         error("El valor no es valido",i)
                         else:
                             error("Falta tipo",i)
-                    elif linea[0] == 'print':
+                    elif linea[0] == 'print':                               #funcion print
                         if linea[1] == "(" and linea[-2] == ")":
                             ins,fu,da,mensajes = imprime(linea[2:-2],variables,i,mensajes)
                             instrucciones["text"].extend(ins)
@@ -59,7 +59,7 @@ try:
                             instrucciones["data"].update(da)
                         else:
                             error("Falta un parentesis",i)
-                    elif linea[0] == 'read':
+                    elif linea[0] == 'read':                               #funcion read
                         if existerVar(variables,linea[2]):
                             if linea[1] == "(" and linea[-2] == ")":
                                 instrucciones['text'].extend(["\n\t#Leyendo","\tli a0, 0",f"\tla a1, {linea[2]}","\tli a2, 100","\tli a7, 63","ecall"])
@@ -67,7 +67,7 @@ try:
                                 error("Falta un parentesis",i)
                         else:
                             error(f"La variable {linea[2]} no ha sido declarada",linea)
-                    elif linea[0] == 'for':
+                    elif linea[0] == 'for':                                #funcion for
                         if linea[1]=='(' and linea[-2] == ')':
                             entraFor = True
                             instrucciones["text"].append('\n\t#Ejecutando For')
@@ -95,7 +95,7 @@ try:
 
                         salidaEnsablador("ensablador",instrucciones)
 
-                elif existerVar(variables,linea[0]):
+                elif existerVar(variables,linea[0]):            #si no es palabra reservada
                     op=0
                     for token in linea:                                     #Cuenta cuantos operadores tiene para determinar si
                         if es_operador(token):                              # es operacion o una asignacion de valores
@@ -119,7 +119,14 @@ try:
                                         error("El valor no es valido",i)
                                 else:
                                     if es_palRes(linea[2]):               #aqui va la parte de seno,coseno,tangente
-                                        pass
+                                        if linea[2]=='sin':
+                                            instrucciones['funciones'].add('seno')
+                                        elif linea[2]=='cos':
+                                            instrucciones['funciones'].add('coseno')
+                                        elif linea[2]=='tan':
+                                            instrucciones['funciones'].add('tangente')
+                                        else:
+                                            error("Funcion invalida",i)
                                     elif esDelTipo(var.tipo,linea[3]):
                                         instrucciones['funciones'].add('copiaCadena')
                                         instrucciones['data'].add(f'mensaje{mensajes}: .ascii "{linea[3]}"')
