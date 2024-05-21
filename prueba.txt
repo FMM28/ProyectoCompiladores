@@ -4,20 +4,8 @@ var int b = 10;
 var string c = "hola";
 var float d;
 
-b = 100;
-
-a = (b + 10)/2;
-
-b = sin(a);
-
-print(b);
-
-c = "adios";
-
-print(c,"mundo");
-
-a = 2 * 2 * 2 * 2;
-
-a = 2 ^ 2 ^ 2;
+for (a = 1; 10) {
+    print(a);
+}
 
 end;
