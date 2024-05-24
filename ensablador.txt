@@ -1,11 +1,11 @@
 .data
-b: .word 10
 c: .ascii "hola"
-mensaje_concatenado: .space 20
+b: .word 10
 
 .bss
 d: .space 4
 a: .space 4
+mensaje_concatenado: .space 20
 
 .text
 .global _start
@@ -13,13 +13,11 @@ a: .space 4
 _start:
 
 	#Ejecutando For
-	li t1, 1
-	la t0, a
-	sw t1, 0(t0)
 	la x29, a
+	li t1, 1
+	sw t1, 0(x29)
 	lw x30, x29
 	li x31, 1
-
 
 for0:
 	bge x30, x31, finFor0
@@ -37,10 +35,11 @@ for0:
 	mv a2, a1
 	li a7, 64
 	ecall
+
+	#Aumento y repeticion for
 	addi x30, x30, 1
 	sw x29, 0(x30)
 	j for0
-
 
 finFor0:
 

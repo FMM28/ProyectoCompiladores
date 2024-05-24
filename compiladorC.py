@@ -25,7 +25,7 @@ try:
         # print(i)
         if entraFor:            #busca el final del ciclo for
             if linea[-1]=='}':
-                instrucciones["text"].extend(['\taddi x30, x30, 1','\tsw x29, 0(x30)',f'\tj for{saltosFor}',f'\nfinFor{saltosFor}:'])
+                instrucciones["text"].extend(['\n\t#Aumento y repeticion for','\taddi x30, x30, 1','\tsw x29, 0(x30)',f'\tj for{saltosFor}',f'\nfinFor{saltosFor}:'])
                 entraFor = False
                 saltosFor+=1
         if len(linea)>1:                #se salta lineas vacias
@@ -53,10 +53,11 @@ try:
                             error("Falta tipo",i)
                     elif linea[0] == 'print':                               #funcion print
                         if linea[1] == "(" and linea[-2] == ")":
-                            ins,fu,da,mensajes = imprime(linea[2:-2],variables,i,mensajes)
+                            ins,fu,da,mensajes,bs = imprime(linea[2:-2],variables,i,mensajes)
                             instrucciones["text"].extend(ins)
                             instrucciones['funciones'].update(fu)
                             instrucciones["data"].update(da)
+                            instrucciones['bss'].update(bs)
                         else:
                             error("Falta un parentesis",i)
                     elif linea[0] == 'read':                               #funcion read
@@ -70,12 +71,12 @@ try:
                     elif linea[0] == 'for':                                #funcion for
                         if linea[1]=='(' and linea[-2] == ')':
                             entraFor = True
-                            instrucciones["text"].append('\n\t#Ejecutando For')
+                            instrucciones["text"].extend(['\n\t#Ejecutando For',f'\tla x29, {linea[2]}'])
                             if existerVar(variables,linea[2]):
-                                instrucciones["text"].extend([f'\tli t1, {linea[4]}',f'\tla t0, {linea[2]}','\tsw t1, 0(t0)'])
+                                instrucciones["text"].extend([f'\tli t1, {linea[4]}','\tsw t1, 0(x29)'])
                             else:
                                 agregaVar(variables,'int',linea[2],linea[4])
-                            instrucciones["text"].extend([f'\tla x29, {linea[2]}','\tlw x30, x29',f'\tli x31, {linea[4]}',f'\nfor{saltosFor}:',f'\tbge x30, x31, finFor{saltosFor}'])
+                            instrucciones["text"].extend(['\tlw x30, x29',f'\tli x31, {linea[4]}',f'\nfor{saltosFor}:',f'\tbge x30, x31, finFor{saltosFor}'])
                         else:
                             error("Falta un parentesis",i)
                     elif linea[0] == 'println':

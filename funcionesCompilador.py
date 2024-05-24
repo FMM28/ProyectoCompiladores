@@ -266,7 +266,7 @@ def esDelTipo(tipo,valor):
 def imprime(datos,listaVariables,linea,mensajes):
     instrucciones = ["\n\t#Imprimiendo"]
     funciones = {'copiaCadena','obtenerLongitud'}
-    data = {"mensaje_concatenado: .space 20"}
+    data = set()
     estado = 'a'
     tmp=''
     for dato in datos:
@@ -295,8 +295,7 @@ def imprime(datos,listaVariables,linea,mensajes):
                 tmp = dato
     instrucciones.extend(["\tli a0, 1","\tla a1, mensaje_concatenado","\tjal ra, obtener_longitud","\tmv a2, a1","\tli a7, 64","\tecall"])
     
-    return instrucciones,funciones,data,mensajes
-
+    return instrucciones,funciones,data,mensajes,{"mensaje_concatenado: .space 20"}
 def salida(nombre,datos):
         
         with open(nombre+'.txt', 'w') as archivo:
