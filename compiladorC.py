@@ -1,3 +1,8 @@
+# Codigo hecho por:
+#   -Lozano Ramos Anahi Alondra
+#   -Marquez Maya Francisco
+#   -Nieto Rios Luis Rodrigo
+
 from funcionesCompilador import *
 
 lineas = abrirArchivo()                                     #abre un archivo
